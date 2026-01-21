@@ -20,7 +20,11 @@ logging.getLogger("livekit.agents").setLevel(logging.WARNING)
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions, ChatContext, ChatMessage
-from livekit.plugins import google, noise_cancellation
+from livekit.plugins import google
+try:
+    from livekit.plugins import noise_cancellation
+except ImportError:
+    noise_cancellation = None  # Optional on cloud
 import asyncio
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
