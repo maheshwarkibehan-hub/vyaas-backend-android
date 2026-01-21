@@ -1,9 +1,14 @@
+# VYAAS AI Backend - Railway Deployment Requirements
+
+# Core LiveKit
 livekit-agents>=0.8.0
 livekit-plugins-google>=0.4.0
-python-dotenv>=1.0.0
-psutil>=6.0.0
-pyautogui>=0.9.54
-pyperclip>=1.9.0
-screeninfo>=0.8.1
-Pillow>=10.0.0
-requests>=2.31.0
+
+# Utilities
+python-dotenv
+requests
+psutil
+Pillow
+
+# Note: pyautogui and pyperclip are skipped for cloud deployment
+# They require a display/clipboard which cloud servers don't have
