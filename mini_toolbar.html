@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYAAS Mini</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* All control buttons - matching control bar exactly */
+        .btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Mic active state - teal color like in image */
+        .btn.mic-active {
+            background: rgba(20, 184, 166, 0.3);
+            border-color: rgba(20, 184, 166, 0.5);
+            color: #14b8a6;
+        }
+
+        /* Muted state */
+        .btn.muted {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        /* Active state for other buttons */
+        .btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #60a5fa;
+        }
+
+        /* Divider */
+        .divider {
+            width: 1px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Expand/Minimize button */
+        .btn.expand {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* END button - matching exact style */
+        .btn-end {
+            height: 48px;
+            padding: 0 20px;
+            border-radius: 9999px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-end:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: scale(1.02);
+        }
+
+        .btn-end:active {
+            transform: scale(0.98);
+        }
+
+        /* Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .icon-sm {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Drag region */
+        .drag-zone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: move;
+        }
+    </style>
+</head>
+
+<body class="pywebview-drag-region">
+    <div class="drag-zone pywebview-drag-region"></div>
+
+    <div class="container">
+        <!-- Mic Button - teal when active -->
+        <button class="btn mic-active" id="micBtn" title="Toggle Mic">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+        </button>
+
+        <!-- Camera Button -->
+        <button class="btn" id="videoBtn" title="Toggle Camera">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 7l-7 5 7 5V7z" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+        </button>
+
+        <!-- Screen Share Button -->
+        <button class="btn" id="screenBtn" title="Screen Share">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+        </button>
+
+        <!-- Image Gen Button -->
+        <button class="btn" id="imageBtn" title="Image Generation">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+            </svg>
+        </button>
+
+        <!-- Code Button -->
+        <button class="btn" id="codeBtn" title="Code Mode">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+            </svg>
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- Expand Button -->
+        <button class="btn expand" id="expandBtn" title="Expand (F11)">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+        </button>
+
+        <!-- END Button -->
+        <button class="btn-end" id="endBtn" title="End Session">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.27 11.27 0 0 0-2.67-1.85.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
+            </svg>
+            <span>END</span>
+        </button>
+    </div>
+
+    <script>
+        let isMicActive = true;
+        let isVideoOn = false;
+        let isScreenSharing = false;
+
+        // Mic toggle
+        document.getElementById('micBtn').addEventListener('click', function () {
+            isMicActive = !isMicActive;
+            if (isMicActive) {
+                this.classList.remove('muted');
+                this.classList.add('mic-active');
+            } else {
+                this.classList.remove('mic-active');
+                this.classList.add('muted');
+            }
+        });
+
+        // Video toggle
+        document.getElementById('videoBtn').addEventListener('click', function () {
+            isVideoOn = !isVideoOn;
+            this.classList.toggle('active', isVideoOn);
+        });
+
+        // Screen share toggle
+        document.getElementById('screenBtn').addEventListener('click', function () {
+            isScreenSharing = !isScreenSharing;
+            this.classList.toggle('active', isScreenSharing);
+        });
+
+        // Image button - open image gen
+        document.getElementById('imageBtn').addEventListener('click', function () {
+            this.classList.toggle('active');
+        });
+
+        // Code button
+        document.getElementById('codeBtn').addEventListener('click', function () {
+            this.classList.toggle('active');
+        });
+
+        // Expand button - restore full window
+        document.getElementById('expandBtn').addEventListener('click', function () {
+            if (window.pywebview && window.pywebview.api) {
+                window.pywebview.api.expand_to_full();
+            }
+        });
+
+        // End button
+        document.getElementById('endBtn').addEventListener('click', function () {
+            if (window.pywebview && window.pywebview.api) {
+                window.pywebview.api.expand_to_full();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                document.getElementById('expandBtn').click();
+            }
+        });
+    </script>
+</body>
+
+</html>

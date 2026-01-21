@@ -1,0 +1,20 @@
+{
+    "name": "vyaas-whatsapp-service",
+    "version": "1.0.0",
+    "description": "WhatsApp message listener for VYAAS AI",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node index.js"
+    },
+    "dependencies": {
+        "whatsapp-web.js": "^1.23.0",
+        "qrcode-terminal": "^0.12.0",
+        "express": "^4.18.2",
+        "puppeteer": "^21.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "private": true
+}

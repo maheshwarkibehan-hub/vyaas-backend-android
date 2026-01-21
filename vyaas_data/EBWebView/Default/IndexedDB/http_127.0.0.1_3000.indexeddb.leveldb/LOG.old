@@ -1,0 +1,13 @@
+2026/01/14-08:53:55.980 35e8 Reusing MANIFEST C:\Users\mahes\OneDrive\Desktop\vyaasaiupdated\Backend\vyaas_data\EBWebView\Default\IndexedDB\http_127.0.0.1_3000.indexeddb.leveldb/MANIFEST-000001
+2026/01/14-08:53:55.981 35e8 Recovering log #7
+2026/01/14-08:53:55.981 35e8 Reusing old log C:\Users\mahes\OneDrive\Desktop\vyaasaiupdated\Backend\vyaas_data\EBWebView\Default\IndexedDB\http_127.0.0.1_3000.indexeddb.leveldb/000007.log 
+2026/01/14-08:53:56.007 1024 Level-0 table #11: started
+2026/01/14-08:53:56.011 1024 Level-0 table #11: 4164 bytes OK
+2026/01/14-08:53:56.013 1024 Delete type=0 #7
+2026/01/14-08:53:56.014 35e8 Manual compaction at level-0 from '\x00\x05\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x06\x00\x00\x00' @ 0 : 0; will stop at '\x00\x05\x00\x00\x05' @ 189 : 1
+2026/01/14-08:53:56.015 35e8 Compacting 1@0 + 1@1 files
+2026/01/14-08:53:56.017 35e8 Generated table #12@0: 56 keys, 3677 bytes
+2026/01/14-08:53:56.017 35e8 Compacted 1@0 + 1@1 files => 3677 bytes
+2026/01/14-08:53:56.019 35e8 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/01/14-08:53:56.020 35e8 Delete type=2 #11
+2026/01/14-08:53:56.020 35e8 Manual compaction at level-0 from '\x00\x05\x00\x00\x05' @ 189 : 1 .. '\x00\x06\x00\x00\x00' @ 0 : 0; will stop at (end)

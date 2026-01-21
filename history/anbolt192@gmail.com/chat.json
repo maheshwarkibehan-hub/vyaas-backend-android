@@ -1,0 +1,77 @@
+[
+  {
+    "messages": [
+      {
+        "id": "item_dcf828584226",
+        "type": "agent_handoff",
+        "old_agent_id": null,
+        "new_agent_id": "assistant",
+        "created_at": 1767876324.272554
+      }
+    ],
+    "timestamp": 1767876348.9534473
+  },
+  {
+    "messages": [
+      {
+        "id": "GR_a90d1d2099ab",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          "मैं Vyaas हूं, आपका Personal AI Assistant, जिसे Maheshwar Hari Tripaathi ने Design किया है। Good evening! आज शाम का मौसम कुछ ज्यादा ही pleasant है Kaushambi में 🌆। बताइए, मैं आपकी किस प्रकार सहायता कर सकता हूँ?"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {
+          "started_speaking_at": 1767876333.0223262,
+          "stopped_speaking_at": 1767876347.942062
+        },
+        "created_at": 1767876333.0223262,
+        "hash": null
+      }
+    ],
+    "timestamp": 1767876348.9634526
+  },
+  {
+    "messages": [
+      {
+        "id": "item_775ce38cc69c",
+        "type": "message",
+        "role": "user",
+        "content": [
+          "ajj ki tarik"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {},
+        "created_at": 1767876355.9671905,
+        "hash": null
+      }
+    ],
+    "timestamp": 1767876356.041163
+  },
+  {
+    "messages": [
+      {
+        "id": "GR_48024e2f9e45",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          "आज की तारीख है 08 January 2026. समय है 06:11 PM (IST)"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {
+          "started_speaking_at": 1767876358.7650218,
+          "stopped_speaking_at": 1767876365.6289687
+        },
+        "created_at": 1767876358.7650218,
+        "hash": null
+      }
+    ],
+    "timestamp": 1767876366.1435869
+  }
+]
