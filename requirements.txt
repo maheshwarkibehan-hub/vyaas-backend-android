@@ -10,5 +10,9 @@ requests
 psutil
 Pillow
 
-# Note: pyautogui and pyperclip are skipped for cloud deployment
-# They require a display/clipboard which cloud servers don't have
+# Memory
+mem0ai
+
+# Additional dependencies
+aiohttp
+supabase
