@@ -1,0 +1,18 @@
+# VYAAS AI - Lightweight Requirements for Termux
+# Excludes packages that are hard to compile on ARM
+
+python-dotenv
+requests
+psutil
+
+# LiveKit (might take long to compile)
+livekit-agents>=0.8.0
+livekit-plugins-google>=0.4.0
+
+# Note: Skip these on Termux (won't work anyway):
+# pyautogui - Needs X11
+# pyperclip - Needs clipboard manager
+# screeninfo - Needs display
+
+# Optional (install only if needed):
+# Pillow  - Takes long to compile
