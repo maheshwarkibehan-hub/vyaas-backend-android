@@ -6,13 +6,12 @@ This lightweight bridge:
 1. Connects to LiveKit as a hidden participant
 2. Listens for 'local_command' data messages from the AI agent
 3. Executes commands locally using subprocess, pyautogui, etc.
-4. Integrates with WhatsApp Service for direct messaging (no UI automation!)
 
 Usage:
     python vyaas_desktop_bridge.py
 
 Requirements:
-    pip install livekit pyautogui pyperclip python-dotenv requests
+    pip install livekit pyautogui pyperclip python-dotenv
 """
 
 import asyncio
@@ -25,7 +24,6 @@ import time
 import urllib.parse
 from datetime import datetime
 from dotenv import load_dotenv
-import requests
 
 # Optional imports (graceful fallback)
 try:
@@ -61,10 +59,6 @@ logger = logging.getLogger("vyaas_bridge")
 LIVEKIT_URL = os.getenv("LIVEKIT_URL", "wss://vyass-sxwzn7ti.livekit.cloud")
 BRIDGE_IDENTITY = "vyaas_desktop_bridge"
 
-# WhatsApp Service Configuration (runs locally via Node.js)
-WHATSAPP_SERVICE_URL = "http://127.0.0.1:3001"
-WHATSAPP_SERVICE_PATH = os.path.join(os.path.dirname(__file__), "whatsapp-service")
-
 
 class DesktopBridge:
     """Local Desktop Bridge that executes commands from cloud AI agent"""
@@ -72,8 +66,6 @@ class DesktopBridge:
     def __init__(self):
         self.room = rtc.Room()
         self.running = False
-        self.whatsapp_service_running = False
-        self.whatsapp_contacts_cache = {}  # Cache contacts for name search
         
         # App mappings for Windows
         self.app_mappings = {
@@ -246,31 +238,9 @@ class DesktopBridge:
             logger.info("📝 Opened Notepad")
     
     async def send_whatsapp(self, phone: str, message: str):
-        """Send WhatsApp message via WhatsApp Service (Direct API - no UI automation!)"""
+        """Send WhatsApp message via Desktop app"""
         logger.info(f"📱 Sending WhatsApp to {phone}")
         
-        # Try WhatsApp Service first (fast, direct API)
-        if await self.check_whatsapp_service():
-            try:
-                response = requests.post(
-                    f"{WHATSAPP_SERVICE_URL}/send",
-                    json={"to": phone, "message": message},
-                    timeout=10
-                )
-                if response.status_code == 200:
-                    logger.info(f"✅ WhatsApp message sent via Direct API to {phone}")
-                    return
-                else:
-                    logger.warning(f"WhatsApp Service error: {response.json()}")
-            except Exception as e:
-                logger.warning(f"WhatsApp Service failed: {e}")
-        
-        # Fallback to UI automation if service not available
-        logger.info("⚡ Falling back to UI automation...")
-        await self._send_whatsapp_ui(phone, message)
-    
-    async def _send_whatsapp_ui(self, phone: str, message: str):
-        """Fallback: Send WhatsApp using UI automation"""
         if not pyautogui:
             logger.error("pyautogui required for WhatsApp automation")
             return
@@ -292,48 +262,9 @@ class DesktopBridge:
         logger.info(f"✅ WhatsApp message sent to {phone}")
     
     async def send_whatsapp_contact(self, contact: str, message: str):
-        """Send WhatsApp message by contact name using WhatsApp Service"""
+        """Send WhatsApp message by searching contact name"""
         logger.info(f"📱 Sending WhatsApp to contact: {contact}")
         
-        # Try WhatsApp Service first
-        if await self.check_whatsapp_service():
-            try:
-                # Get chats and find the contact
-                response = requests.get(f"{WHATSAPP_SERVICE_URL}/chats", timeout=10)
-                if response.status_code == 200:
-                    chats = response.json().get('chats', [])
-                    
-                    # Find matching contact (case-insensitive)
-                    contact_lower = contact.lower()
-                    matched_chat = None
-                    
-                    for chat in chats:
-                        chat_name = chat.get('name', '').lower()
-                        if contact_lower in chat_name or chat_name in contact_lower:
-                            matched_chat = chat
-                            break
-                    
-                    if matched_chat:
-                        # Send to the matched contact
-                        send_response = requests.post(
-                            f"{WHATSAPP_SERVICE_URL}/send",
-                            json={"to": matched_chat['id'], "message": message},
-                            timeout=10
-                        )
-                        if send_response.status_code == 200:
-                            logger.info(f"✅ WhatsApp sent to {matched_chat.get('name')} via Direct API")
-                            return
-                    else:
-                        logger.warning(f"Contact '{contact}' not found in recent chats")
-            except Exception as e:
-                logger.warning(f"WhatsApp Service contact search failed: {e}")
-        
-        # Fallback to UI automation
-        logger.info("⚡ Falling back to UI automation...")
-        await self._send_whatsapp_contact_ui(contact, message)
-    
-    async def _send_whatsapp_contact_ui(self, contact: str, message: str):
-        """Fallback: Send WhatsApp by contact name using UI automation"""
         if not pyautogui or not pyperclip:
             logger.error("pyautogui and pyperclip required")
             return
@@ -372,33 +303,6 @@ class DesktopBridge:
         pyautogui.press('enter')
         
         logger.info(f"✅ WhatsApp sent to {contact}")
-    
-    async def check_whatsapp_service(self) -> bool:
-        """Check if WhatsApp Service is running and connected"""
-        try:
-            response = requests.get(f"{WHATSAPP_SERVICE_URL}/health", timeout=2)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('ready'):
-                    self.whatsapp_service_running = True
-                    return True
-                elif data.get('hasQR'):
-                    logger.warning("WhatsApp Service needs QR scan - check the terminal")
-        except:
-            pass
-        
-        self.whatsapp_service_running = False
-        return False
-    
-    async def get_whatsapp_messages(self) -> list:
-        """Get pending WhatsApp messages from the service"""
-        try:
-            response = requests.get(f"{WHATSAPP_SERVICE_URL}/messages", timeout=5)
-            if response.status_code == 200:
-                return response.json().get('messages', [])
-        except:
-            pass
-        return []
     
     async def type_text(self, text: str):
         """Type text using keyboard automation"""
@@ -519,17 +423,6 @@ class DesktopBridge:
         print("  Press Ctrl+C to stop")
         print("="*50 + "\n")
         
-        # Check WhatsApp Service status
-        if await self.check_whatsapp_service():
-            print("✅ WhatsApp Service connected (Direct API mode)")
-        else:
-            print("⚠️ WhatsApp Service not running (Using UI automation fallback)")
-            print("   To enable Direct API: cd whatsapp-service && npm start")
-        print()
-        
-        # Start WhatsApp message polling
-        asyncio.create_task(self.poll_whatsapp_messages())
-        
         try:
             while self.running:
                 await asyncio.sleep(1)
@@ -538,50 +431,6 @@ class DesktopBridge:
         finally:
             await self.room.disconnect()
             logger.info("Bridge disconnected")
-    
-    async def poll_whatsapp_messages(self):
-        """Poll WhatsApp Service for incoming messages and forward to AI"""
-        while self.running:
-            try:
-                if await self.check_whatsapp_service():
-                    messages = await self.get_whatsapp_messages()
-                    
-                    for msg in messages:
-                        # Log the message
-                        sender = msg.get('contactName', msg.get('from', 'Unknown'))
-                        body = msg.get('body', '')
-                        is_group = msg.get('isGroup', False)
-                        group_name = msg.get('groupName', '')
-                        
-                        if is_group:
-                            logger.info(f"📩 WhatsApp [{group_name}] {sender}: {body[:50]}...")
-                        else:
-                            logger.info(f"📩 WhatsApp from {sender}: {body[:50]}...")
-                        
-                        # Forward to AI agent via LiveKit
-                        await self.forward_whatsapp_to_ai(msg)
-                
-            except Exception as e:
-                logger.debug(f"WhatsApp polling error: {e}")
-            
-            await asyncio.sleep(3)  # Poll every 3 seconds
-    
-    async def forward_whatsapp_to_ai(self, message: dict):
-        """Forward WhatsApp message to AI agent via LiveKit data channel"""
-        try:
-            payload = {
-                "type": "whatsapp_message",
-                "data": message
-            }
-            
-            # Send to AI agent via LiveKit
-            await self.room.local_participant.publish_data(
-                json.dumps(payload).encode('utf-8'),
-                topic="whatsapp_notifications"
-            )
-            logger.info(f"📤 Forwarded WhatsApp message to AI agent")
-        except Exception as e:
-            logger.error(f"Failed to forward WhatsApp to AI: {e}")
 
 
 async def get_bridge_token():
