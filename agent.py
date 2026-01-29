@@ -131,6 +131,9 @@ from vyaas_whatsapp_listener import (
 )
 from vyaas_maps import map_manager, show_google_map
 
+# Local Commands (for remote execution on user's PC)
+import vyaas_local_commands
+
 from memory_loop import MemoryExtractor
 
 
@@ -235,6 +238,22 @@ class Assistant(Agent):
                                 get_whatsapp_status,
                                 # Map Tools
                                 show_google_map,
+                                # LOCAL COMMAND TOOLS (execute on user's PC via Desktop Bridge)
+                                vyaas_local_commands.open_whatsapp_local,
+                                vyaas_local_commands.open_maps_local,
+                                vyaas_local_commands.open_notes_local,
+                                vyaas_local_commands.open_app_local,
+                                vyaas_local_commands.send_whatsapp_local,
+                                vyaas_local_commands.send_whatsapp_contact_local,
+                                vyaas_local_commands.type_text_local,
+                                vyaas_local_commands.press_key_local,
+                                vyaas_local_commands.open_url_local,
+                                vyaas_local_commands.play_youtube_local,
+                                vyaas_local_commands.take_screenshot_local,
+                                vyaas_local_commands.set_volume_local,
+                                vyaas_local_commands.lock_pc_local,
+                                vyaas_local_commands.shutdown_pc_local,
+                                vyaas_local_commands.cancel_shutdown_local,
                         ]
                                 )
 
@@ -254,6 +273,9 @@ async def entrypoint(ctx: agents.JobContext):
     
     # Initialize Map Manager with current room
     map_manager.set_room(ctx.room)
+    
+    # Initialize Local Commands with room reference
+    vyaas_local_commands.set_room(ctx.room)
     
     # Auto-Connect to Android (User Preference)
     async def auto_connect_android():

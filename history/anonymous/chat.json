@@ -1008,5 +1008,70 @@
       }
     ],
     "timestamp": 1768975873.6688719
+  },
+  {
+    "messages": [
+      {
+        "id": "item_deae16f2cc92",
+        "type": "agent_handoff",
+        "old_agent_id": null,
+        "new_agent_id": "assistant",
+        "created_at": 1768980202.9078345
+      }
+    ],
+    "timestamp": 1768980217.7984843
+  },
+  {
+    "messages": [
+      {
+        "id": "item_b9c9fc91d1cc",
+        "type": "message",
+        "role": "user",
+        "content": [
+          "e"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {},
+        "created_at": 1768980203.9021864,
+        "hash": null
+      }
+    ],
+    "timestamp": 1768980217.8139265
+  },
+  {
+    "messages": [
+      {
+        "id": "GR_b95033e10b13",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          "Arre Bhaiya, sirf 'e'? Kya karna hai? Kuch search karna tha ya koi app open karoon?"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {
+          "started_speaking_at": 1768980209.2117784,
+          "stopped_speaking_at": 1768980213.5121486
+        },
+        "created_at": 1768980209.2117784,
+        "hash": null
+      }
+    ],
+    "timestamp": 1768980217.837591
+  },
+  {
+    "messages": [
+      {
+        "id": "item_3144062c35b6",
+        "type": "agent_handoff",
+        "old_agent_id": null,
+        "new_agent_id": "assistant",
+        "created_at": 1768983494.9774861
+      }
+    ],
+    "timestamp": 1768983499.943629
   }
 ]

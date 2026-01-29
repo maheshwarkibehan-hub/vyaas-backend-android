@@ -21982,5 +21982,73 @@
       }
     ],
     "timestamp": 1768976056.282401
+  },
+  {
+    "messages": [
+      {
+        "id": "item_387763a59f67",
+        "type": "agent_handoff",
+        "old_agent_id": null,
+        "new_agent_id": "assistant",
+        "created_at": 1768983276.3769903
+      }
+    ],
+    "timestamp": 1768983291.1140094
+  },
+  {
+    "messages": [
+      {
+        "id": "GR_be93e24a0833",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          "Aur Bhaiya! Bas aise hi check kar rahe the ki main zinda hoon ya nahi? 😊 Batao kya karoon? Koi code, gaana, ya kuch search karna hai?"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {
+          "started_speaking_at": 1768983283.486065,
+          "stopped_speaking_at": 1768983290.1024425
+        },
+        "created_at": 1768983283.486065,
+        "hash": null
+      }
+    ],
+    "timestamp": 1768983291.1813638
+  },
+  {
+    "messages": [
+      {
+        "id": "item_10cc1bb67b68",
+        "type": "agent_handoff",
+        "old_agent_id": null,
+        "new_agent_id": "assistant",
+        "created_at": 1768983528.8689501
+      }
+    ],
+    "timestamp": 1768983547.0404015
+  },
+  {
+    "messages": [
+      {
+        "id": "GR_83f217943bbd",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          "Hmm? Bas dot? 🤔 Sab theek hai na Bhaiya? Kuch start karna hai ya kuch search karoon?"
+        ],
+        "interrupted": false,
+        "transcript_confidence": null,
+        "extra": {},
+        "metrics": {
+          "started_speaking_at": 1768983540.6521704,
+          "stopped_speaking_at": 1768983546.0349236
+        },
+        "created_at": 1768983540.6521704,
+        "hash": null
+      }
+    ],
+    "timestamp": 1768983547.0962057
   }
 ]
