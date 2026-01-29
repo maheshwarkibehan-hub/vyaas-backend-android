@@ -18,11 +18,44 @@ logger.setLevel(logging.INFO)
 # Global reference to the room for sending data
 _current_room = None
 
+# Callback for handling incoming WhatsApp messages
+_whatsapp_message_callback = None
+
+
 def set_room(room):
     """Set the LiveKit room reference for data channel communication"""
     global _current_room
     _current_room = room
     logger.info("Room set for local commands")
+
+
+def set_whatsapp_callback(callback):
+    """Set a callback function to handle incoming WhatsApp messages"""
+    global _whatsapp_message_callback
+    _whatsapp_message_callback = callback
+    logger.info("WhatsApp message callback set")
+
+
+async def handle_whatsapp_notification(data: dict):
+    """
+    Handle incoming WhatsApp notification from Desktop Bridge.
+    This is called when the bridge forwards a WhatsApp message.
+    """
+    global _whatsapp_message_callback
+    
+    if _whatsapp_message_callback:
+        await _whatsapp_message_callback(data)
+    else:
+        # Default logging
+        sender = data.get('contactName', data.get('from', 'Unknown'))
+        body = data.get('body', '')
+        is_group = data.get('isGroup', False)
+        group_name = data.get('groupName', '')
+        
+        if is_group:
+            logger.info(f"📩 WhatsApp [{group_name}] {sender}: {body[:50]}...")
+        else:
+            logger.info(f"📩 WhatsApp from {sender}: {body[:50]}...")
 
 async def _send_local_command(command_type: str, params: dict) -> bool:
     """
