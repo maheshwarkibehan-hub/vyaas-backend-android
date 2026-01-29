@@ -1,15 +1,30 @@
-# VYAAS AI Backend - Requirements
+# VYAAS AI Backend - Complete Requirements for Railway
+
+# Core LiveKit
 livekit-agents>=0.8.0
 livekit-plugins-google>=0.4.0
+
+# Utilities
 python-dotenv
 requests
 psutil
 Pillow
+
+# Memory
 mem0ai
+
+# Database
 supabase
 aiohttp
+
+# IoT Control
 python-kasa
+
+# Additional
 openpyxl
 python-docx
 python-pptx
 fpdf
+
+# Note: These are skipped for cloud (require display):
+# pyautogui, pyperclip, screeninfo

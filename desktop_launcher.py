@@ -212,15 +212,29 @@ class VyaasDesktopApp:
         
         # For PyInstaller bundled app, look for compiled backend
         if getattr(sys, 'frozen', False):
-            backend_exe = os.path.join(self.base_dir, 'VyaasAI_Brain.exe')
-            if os.path.exists(backend_exe):
-                print(f"Starting bundled backend: {backend_exe}")
-                self.backend_process = subprocess.Popen(
-                    [backend_exe, 'dev'],
-                    cwd=self.base_dir,
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-                )
-                return True
+            # Check mode from env (loaded by First Run Wizard just now)
+            mode = os.getenv("VYAAS_MODE", "local").lower()
+            
+            if mode == "cloud":
+                bridge_exe = os.path.join(self.base_dir, 'vyaas_desktop_bridge.exe')
+                print(f"Starting bundled bridge: {bridge_exe}")
+                if os.path.exists(bridge_exe):
+                    self.backend_process = subprocess.Popen(
+                        [bridge_exe],
+                        cwd=self.base_dir,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                    )
+                    return True
+            else:
+                backend_exe = os.path.join(self.base_dir, 'VyaasAI_Brain.exe')
+                if os.path.exists(backend_exe):
+                    print(f"Starting bundled backend: {backend_exe}")
+                    self.backend_process = subprocess.Popen(
+                        [backend_exe, 'dev'],
+                        cwd=self.base_dir,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                    )
+                    return True
         
         # Development mode - run Python script
         if os.path.exists(backend_script):
@@ -229,10 +243,24 @@ class VyaasDesktopApp:
             
             if os.path.exists(venv_python):
                 python_exe = venv_python
-                
-            print(f"Starting backend script: {backend_script}")
+            
+            # Check for Cloud Mode (Lightweight Client)
+            mode = os.getenv("VYAAS_MODE", "local").lower()
+            if mode == "cloud":
+                print("[INFO] VYAAS running in CLOUD MODE")
+                script_to_run = os.path.join(self.base_dir, 'vyaas_desktop_bridge.py')
+                print(f"Starting Desktop Bridge: {script_to_run}")
+            else:
+                print("[INFO] VYAAS running in LOCAL MODE")
+                script_to_run = backend_script
+                print(f"Starting Backend Agent: {script_to_run}")
+
+            if not os.path.exists(script_to_run):
+                 print(f"ERROR: Script not found: {script_to_run}")
+                 return False
+
             self.backend_process = subprocess.Popen(
-                [python_exe, backend_script, 'dev'],
+                [python_exe, script_to_run, 'dev'],
                 cwd=self.base_dir,
                 creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
             )
@@ -381,7 +409,137 @@ class SilentHTTPHandler(SimpleHTTPRequestHandler):
             return super().do_GET()
 
 
+class SetupAPI:
+    """API for the Setup Wizard"""
+    def __init__(self, window):
+        self.window = window
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+             self.base_dir = os.path.dirname(sys.executable)
+
+    def save_config(self, data):
+        """Save configuration to .env file"""
+        env_path = os.path.join(self.base_dir, '.env')
+        try:
+            with open(env_path, 'w', encoding='utf-8') as f:
+                f.write(f"LIVEKIT_URL={data.get('livekitUrl', '')}\n")
+                f.write(f"LIVEKIT_API_KEY={data.get('livekitKey', '')}\n")
+                f.write(f"LIVEKIT_API_SECRET={data.get('livekitSecret', '')}\n")
+                f.write(f"GEMINI_API_KEY={data.get('geminiKey', '')}\n")
+                f.write(f"VYAAS_MODE={data.get('mode', 'cloud')}\n")
+                f.write(f"VYAAS_ROOM_NAME={data.get('roomName', 'vyaas_assist_room')}\n")
+            
+            print("[OK] Configuration saved!")
+            self.window.destroy()
+            return {"success": True}
+        except Exception as e:
+            print(f"[ERR] Failed to save config: {e}")
+            return {"success": False, "error": str(e)}
+
+    def close(self):
+        self.window.destroy()
+
+
+def run_setup_wizard():
+    """Run the first-time setup wizard"""
+    
+    # HTML Content for Setup Wizard
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>VYAAS AI Setup</title>
+        <style>
+            body { font-family: 'Segoe UI', sans-serif; background: #09090b; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            .container { background: #18181b; padding: 2rem; border-radius: 12px; width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #27272a; }
+            h2 { text-align: center; color: #8b5cf6; margin-top: 0; }
+            .form-group { margin-bottom: 1rem; }
+            label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
+            input, select { width: 100%; padding: 0.75rem; background: #27272a; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; box-sizing: border-box; outline: none; }
+            input:focus { border-color: #8b5cf6; }
+            button { width: 100%; padding: 0.75rem; background: #7c3aed; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 1rem; transition: background 0.2s; }
+            button:hover { background: #6d28d9; }
+            .note { font-size: 0.8rem; color: #71717a; margin-top: 1rem; text-align: center; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>VYAAS AI Setup</h2>
+            <div class="form-group">
+                <label>Mode</label>
+                <select id="mode">
+                    <option value="cloud">Cloud Client (Connect to Remote Brain)</option>
+                    <option value="local">Local Brain (Run Locally)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>LiveKit URL</label>
+                <input type="text" id="lk_url" placeholder="wss://..." value="wss://vyass-sxwzn7ti.livekit.cloud">
+            </div>
+            <div class="form-group">
+                <label>LiveKit API Key</label>
+                <input type="text" id="lk_key" placeholder="API Key">
+            </div>
+            <div class="form-group">
+                <label>LiveKit API Secret</label>
+                <input type="password" id="lk_secret" placeholder="API Secret">
+            </div>
+             <div class="form-group">
+                <label>Gemini API Key (Optional for Cloud Mode)</label>
+                <input type="password" id="gemini_key" placeholder="AI Studio Key">
+            </div>
+            <button onclick="save()">Save & Continue</button>
+            <p class="note">These settings will be saved to .env</p>
+        </div>
+        <script>
+            function save() {
+                const data = {
+                    mode: document.getElementById('mode').value,
+                    livekitUrl: document.getElementById('lk_url').value,
+                    livekitKey: document.getElementById('lk_key').value,
+                    livekitSecret: document.getElementById('lk_secret').value,
+                    geminiKey: document.getElementById('gemini_key').value,
+                    roomName: 'vyaas_assist_room' 
+                };
+                
+                if(!data.livekitKey || !data.livekitSecret) {
+                    alert('LiveKit credentials are required!');
+                    return;
+                }
+                
+                window.pywebview.api.save_config(data);
+            }
+        </script>
+    </body>
+    </html>
+    """
+    
+    window = webview.create_window('VYAAS AI Setup', html=html_content, width=500, height=700)
+    window.expose(SetupAPI(window).save_config)
+    webview.start()
+
+
 def main():
+    # Check for configuration
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+        
+    env_path = os.path.join(base_dir, '.env')
+    
+    # If no .env, run setup wizard
+    if not os.path.exists(env_path):
+        print("[WARN] Configuration not found. Running Setup Wizard...")
+        run_setup_wizard()
+        
+        # Check again if created
+        if not os.path.exists(env_path):
+            print("[ERR] Setup cancelled. Exiting.")
+            return
+
+    from dotenv import load_dotenv
+    load_dotenv(env_path)
+
     app = VyaasDesktopApp()
     app.run()
 

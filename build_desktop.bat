@@ -30,7 +30,7 @@ cd ..\Frontend
 call pnpm build
 if errorlevel 1 (
     echo Frontend build failed!
-    pause
+    timeout /t 5
     exit /b 1
 )
 
@@ -51,8 +51,20 @@ REM Copy backend assets
 echo Copying backend assets...
 copy /Y ".env" "dist\VyaasAI\.env"
 
-REM Build with PyInstaller
-echo Building EXE with PyInstaller...
+REM Build Desktop Bridge (Standalone EXE for cloud mode)
+echo Building Desktop Bridge EXE...
+pyinstaller --noconfirm ^
+    --name "vyaas_desktop_bridge" ^
+    --windowed ^
+    --onefile ^
+    --hidden-import "livekit" ^
+    --hidden-import "pyautogui" ^
+    --hidden-import "pyperclip" ^
+    --distpath "dist\VyaasAI" ^
+    vyaas_desktop_bridge.py
+
+REM Build Main Launcher with PyInstaller
+echo Building Setup/Launcher EXE...
 pyinstaller --noconfirm ^
     --name "VyaasAI" ^
     --icon "..\Frontend\public\icons\favicon.ico" ^
@@ -68,7 +80,7 @@ pyinstaller --noconfirm ^
 
 if errorlevel 1 (
     echo PyInstaller build failed!
-    pause
+    timeout /t 5
     exit /b 1
 )
 
@@ -81,4 +93,4 @@ echo Output: Backend\dist\VyaasAI\VyaasAI.exe
 echo.
 echo To run: double-click VyaasAI.exe
 echo.
-pause
+timeout /t 5

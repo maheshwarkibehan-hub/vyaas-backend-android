@@ -152,20 +152,20 @@ class Assistant(Agent):
                                 google_search,
                                 get_current_datetime,
                                 get_weather,
-                                # System Control Tools
-                                system_shutdown,
-                                system_restart,
-                                cancel_shutdown,
-                                open_chrome,
-                                open_application,
-                                open_file,
-                                open_folder,
-                                lock_computer,
-                                set_volume,
-                                mute_unmute,
-                                take_screenshot,
-                                search_web,
-                                play_youtube,
+                                # System Control Tools (DISABLED FOR CLOUD - Use Local Commands instead)
+                                # system_shutdown,
+                                # system_restart,
+                                # cancel_shutdown,
+                                # open_chrome,
+                                # open_application,
+                                # open_file,
+                                # open_folder,
+                                # lock_computer,
+                                # set_volume,
+                                # mute_unmute,
+                                # take_screenshot,
+                                # search_web,
+                                # play_youtube,
                                 # System Info Tools
                                 get_system_info,
                                 get_cpu_usage,
@@ -188,21 +188,21 @@ class Assistant(Agent):
                                 stop_media,
                                 open_music_app,
                                 search_song,
-                                # Automation Tools
-                                type_text,
-                                type_text_unicode,
-                                press_key,
-                                open_notepad_and_write,
-                                play_youtube_video,
-                                send_email_gmail,
-                                click_screen,
-                                scroll,
-                                wait_seconds,
-                                get_screen_size,
-                                focus_window,
-                                send_whatsapp_to_phone,
-                                send_whatsapp_message,
-                                send_instagram_message,
+                                # Automation Tools (DISABLED FOR CLOUD - Use Local Commands)
+                                # type_text,
+                                # type_text_unicode,
+                                # press_key,
+                                # open_notepad_and_write,
+                                # play_youtube_video,
+                                # send_email_gmail,
+                                # click_screen,
+                                # scroll,
+                                # wait_seconds,
+                                # get_screen_size,
+                                # focus_window,
+                                # send_whatsapp_to_phone,
+                                # send_whatsapp_message,
+                                # send_instagram_message,
                                 # File Creation Tools
                                 create_html_file,
                                 create_text_file,
@@ -274,7 +274,7 @@ async def entrypoint(ctx: agents.JobContext):
     # Initialize Map Manager with current room
     map_manager.set_room(ctx.room)
     
-    # Initialize Local Commands with room for data channel communication
+    # Initialize Local Commands with room reference
     vyaas_local_commands.set_room(ctx.room)
     
     # Auto-Connect to Android (User Preference)

@@ -113,7 +113,9 @@ async def get_connection_details(request: ConnectionDetailsRequest):
 
         participant_name = request.username or "user"
         participant_identity = request.username or f"voice_assistant_user_{os.urandom(4).hex()}"
-        room_name = f"voice_assistant_room_{os.urandom(4).hex()}"
+        
+        # Use fixed room name from env or default to ensures bridge connects to same room
+        room_name = os.getenv("VYAAS_ROOM_NAME", "vyaas_assist_room")
 
         token = api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET) \
             .with_identity(participant_identity) \
