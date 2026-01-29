@@ -1,59 +1,52 @@
 """
 VYAAS AI - Local Commands (Cloud-Side)
-These tools send commands to the Desktop Bridge running on user's PC via HTTP.
+Sends commands via LiveKit data channel to the frontend,
+which then forwards them to the Desktop Bridge running on user's PC.
 
-The Desktop Bridge must be running for these commands to work.
+Flow: Cloud AI -> LiveKit Data Channel -> Frontend -> HTTP -> Desktop Bridge
 """
 
-import os
+import json
 import logging
-import httpx
 from typing import Optional
 
 logger = logging.getLogger("vyaas_local_commands")
 
-# Configuration
-BRIDGE_URL = os.getenv("BRIDGE_URL", "http://localhost:18790")
-BRIDGE_SECRET = os.getenv("BRIDGE_SECRET", "vyaas_local_bridge_2025")
-
-# HTTP client for async requests
-_http_client: Optional[httpx.AsyncClient] = None
+# Global room reference
+_current_room = None
 
 
-def get_client() -> httpx.AsyncClient:
-    """Get or create HTTP client"""
-    global _http_client
-    if _http_client is None:
-        _http_client = httpx.AsyncClient(timeout=30.0)
-    return _http_client
+def set_room(room):
+    """Set the LiveKit room for data channel communication"""
+    global _current_room
+    _current_room = room
+    logger.info("Room set for local commands")
 
 
-async def _send_command(command: str, params: dict) -> str:
-    """Send command to Desktop Bridge"""
+async def _send_local_command(command: str, params: dict) -> str:
+    """Send command to frontend via LiveKit data channel"""
+    global _current_room
+    
+    if not _current_room:
+        logger.error("No room available for sending local commands")
+        return "❌ LiveKit room not connected"
+    
     try:
-        client = get_client()
-        response = await client.post(
-            f"{BRIDGE_URL}/command",
-            json={
-                "secret": BRIDGE_SECRET,
-                "command": command,
-                "params": params
-            }
-        )
+        payload = {
+            "type": "local_command",
+            "command": command,
+            "params": params
+        }
         
-        if response.status_code == 200:
-            data = response.json()
-            logger.info(f"✅ Command {command} executed: {data.get('result', 'ok')}")
-            return data.get("result", "Command executed")
-        elif response.status_code == 401:
-            return "❌ Bridge authorization failed. Check BRIDGE_SECRET."
-        else:
-            return f"❌ Bridge error: {response.status_code}"
-            
-    except httpx.ConnectError:
-        return "❌ Desktop Bridge nahi chal raha. Please run start_bridge.bat on your PC."
+        # Send via data channel - frontend will receive and forward to bridge
+        await _current_room.local_participant.publish_data(
+            json.dumps(payload).encode('utf-8'),
+            topic="local_commands"
+        )
+        logger.info(f"✅ Sent local command via data channel: {command}")
+        return f"Command sent to your PC: {command}"
     except Exception as e:
-        logger.error(f"Error sending command: {e}")
+        logger.error(f"Failed to send local command: {e}")
         return f"❌ Error: {str(e)}"
 
 
@@ -64,7 +57,7 @@ async def open_whatsapp_local() -> str:
     Open WhatsApp Desktop on user's PC.
     Use this when user asks to open WhatsApp.
     """
-    return await _send_command("open_app", {"app": "whatsapp"})
+    return await _send_local_command("open_app", {"app": "whatsapp"})
 
 
 async def open_maps_local(query: str = "") -> str:
@@ -74,7 +67,7 @@ async def open_maps_local(query: str = "") -> str:
     Args:
         query: Optional location to search (e.g., "Delhi", "restaurants near me")
     """
-    return await _send_command("open_maps", {"query": query})
+    return await _send_local_command("open_maps", {"query": query})
 
 
 async def open_notes_local(content: str = "") -> str:
@@ -84,7 +77,7 @@ async def open_notes_local(content: str = "") -> str:
     Args:
         content: Optional text to paste into Notepad
     """
-    return await _send_command("open_notes", {"content": content})
+    return await _send_local_command("open_notes", {"content": content})
 
 
 async def open_app_local(app_name: str) -> str:
@@ -94,7 +87,7 @@ async def open_app_local(app_name: str) -> str:
     Args:
         app_name: Name of the app (e.g., "spotify", "chrome", "calculator", "vscode")
     """
-    return await _send_command("open_app", {"app": app_name})
+    return await _send_local_command("open_app", {"app": app_name})
 
 
 async def send_whatsapp_local(phone: str, message: str) -> str:
@@ -105,7 +98,7 @@ async def send_whatsapp_local(phone: str, message: str) -> str:
         phone: Phone number with country code (e.g., "919876543210")
         message: Message to send
     """
-    return await _send_command("send_whatsapp", {"phone": phone, "message": message})
+    return await _send_local_command("send_whatsapp", {"phone": phone, "message": message})
 
 
 async def send_whatsapp_contact_local(contact_name: str, message: str) -> str:
@@ -116,7 +109,7 @@ async def send_whatsapp_contact_local(contact_name: str, message: str) -> str:
         contact_name: Name of the contact (e.g., "Mitul", "Papa")
         message: Message to send
     """
-    return await _send_command("send_whatsapp_contact", {"contact": contact_name, "message": message})
+    return await _send_local_command("send_whatsapp_contact", {"contact": contact_name, "message": message})
 
 
 async def type_text_local(text: str) -> str:
@@ -127,7 +120,7 @@ async def type_text_local(text: str) -> str:
     Args:
         text: Text to type
     """
-    return await _send_command("type_text", {"text": text})
+    return await _send_local_command("type_text", {"text": text})
 
 
 async def press_key_local(key: str) -> str:
@@ -137,7 +130,7 @@ async def press_key_local(key: str) -> str:
     Args:
         key: Key to press (e.g., "enter", "ctrl+s", "alt+f4")
     """
-    return await _send_command("press_key", {"key": key})
+    return await _send_local_command("press_key", {"key": key})
 
 
 async def open_url_local(url: str) -> str:
@@ -147,7 +140,7 @@ async def open_url_local(url: str) -> str:
     Args:
         url: URL to open (e.g., "https://google.com")
     """
-    return await _send_command("open_url", {"url": url})
+    return await _send_local_command("open_url", {"url": url})
 
 
 async def play_youtube_local(query: str) -> str:
@@ -157,12 +150,12 @@ async def play_youtube_local(query: str) -> str:
     Args:
         query: Search query (e.g., "Arijit Singh songs", "coding tutorial")
     """
-    return await _send_command("play_youtube", {"query": query})
+    return await _send_local_command("play_youtube", {"query": query})
 
 
 async def take_screenshot_local() -> str:
     """Take a screenshot on user's PC and save to Pictures folder."""
-    return await _send_command("screenshot", {})
+    return await _send_local_command("screenshot", {})
 
 
 async def set_volume_local(level: int) -> str:
@@ -172,12 +165,12 @@ async def set_volume_local(level: int) -> str:
     Args:
         level: Volume level 0-100
     """
-    return await _send_command("set_volume", {"level": level})
+    return await _send_local_command("set_volume", {"level": level})
 
 
 async def lock_pc_local() -> str:
     """Lock user's PC immediately."""
-    return await _send_command("lock_pc", {})
+    return await _send_local_command("lock_pc", {})
 
 
 async def shutdown_pc_local(delay: int = 60) -> str:
@@ -187,9 +180,9 @@ async def shutdown_pc_local(delay: int = 60) -> str:
     Args:
         delay: Seconds before shutdown (default 60)
     """
-    return await _send_command("shutdown", {"delay": delay})
+    return await _send_local_command("shutdown", {"delay": delay})
 
 
 async def cancel_shutdown_local() -> str:
     """Cancel any scheduled shutdown."""
-    return await _send_command("cancel_shutdown", {})
+    return await _send_local_command("cancel_shutdown", {})
