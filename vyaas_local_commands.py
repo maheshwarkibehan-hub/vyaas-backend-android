@@ -10,7 +10,6 @@ and executes these commands.
 import json
 import logging
 from typing import Optional
-from livekit.agents import function_tool
 
 logger = logging.getLogger("vyaas_local_commands")
 logger.setLevel(logging.INFO)
@@ -55,7 +54,6 @@ async def _send_local_command(command_type: str, params: dict) -> bool:
 
 # ============== LOCAL APP OPENING TOOLS ==============
 
-@function_tool()
 async def open_whatsapp_local() -> str:
     """
     Open WhatsApp Desktop app on the user's PC.
@@ -69,7 +67,6 @@ async def open_whatsapp_local() -> str:
     return "Error: Desktop bridge se connection nahi hai. Please check if bridge is running."
 
 
-@function_tool()
 async def open_maps_local(query: str = "") -> str:
     """
     Open Google Maps on the user's PC, optionally with a search query.
@@ -84,7 +81,6 @@ async def open_maps_local(query: str = "") -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def open_notes_local(content: str = "") -> str:
     """
     Open Notepad/Notes app on user's PC, optionally with content to write.
@@ -99,7 +95,6 @@ async def open_notes_local(content: str = "") -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def open_app_local(app_name: str) -> str:
     """
     Open any application on the user's PC by name.
@@ -116,7 +111,6 @@ async def open_app_local(app_name: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def send_whatsapp_local(phone_number: str, message: str) -> str:
     """
     Send a WhatsApp message to a phone number via local desktop automation.
@@ -140,7 +134,6 @@ async def send_whatsapp_local(phone_number: str, message: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def send_whatsapp_contact_local(contact_name: str, message: str) -> str:
     """
     Send a WhatsApp message to a contact by searching their name.
@@ -160,7 +153,6 @@ async def send_whatsapp_contact_local(contact_name: str, message: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def type_text_local(text: str) -> str:
     """
     Type text on the user's PC using keyboard automation.
@@ -176,7 +168,6 @@ async def type_text_local(text: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def press_key_local(key: str) -> str:
     """
     Press a keyboard key or combination on user's PC.
@@ -191,7 +182,6 @@ async def press_key_local(key: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def open_url_local(url: str) -> str:
     """
     Open a URL in the default browser on user's PC.
@@ -206,7 +196,6 @@ async def open_url_local(url: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def play_youtube_local(query: str) -> str:
     """
     Search and play a YouTube video on user's PC.
@@ -221,7 +210,6 @@ async def play_youtube_local(query: str) -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def take_screenshot_local() -> str:
     """
     Take a screenshot on the user's PC and save it to Pictures folder.
@@ -234,7 +222,6 @@ async def take_screenshot_local() -> str:
     return "Error: Desktop bridge se connection nahi hai."
 
 
-@function_tool()
 async def set_volume_local(level: int) -> str:
     """
     Set system volume level on user's PC.

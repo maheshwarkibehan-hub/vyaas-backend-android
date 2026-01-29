@@ -31,7 +31,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 import json
 
-import json
+
 import termux_compatibility as termux
 
 # Import your custom modules
