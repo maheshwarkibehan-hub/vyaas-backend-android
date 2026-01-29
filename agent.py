@@ -274,8 +274,7 @@ async def entrypoint(ctx: agents.JobContext):
     # Initialize Map Manager with current room
     map_manager.set_room(ctx.room)
     
-    # Initialize Local Commands with room reference
-    vyaas_local_commands.set_room(ctx.room)
+    # Note: Local commands use HTTP bridge, no room initialization needed
     
     # Auto-Connect to Android (User Preference)
     async def auto_connect_android():

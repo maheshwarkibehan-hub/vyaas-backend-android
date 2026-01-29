@@ -1,290 +1,195 @@
 """
-VYAAS AI - Local Commands Module (Cloud-Side)
-Sends commands to Local Desktop Bridge via LiveKit Data Channel
+VYAAS AI - Local Commands (Cloud-Side)
+These tools send commands to the Desktop Bridge running on user's PC via HTTP.
 
-These tools run on the cloud server and send commands to the user's PC
-via LiveKit's data channel. The Desktop Bridge running locally receives
-and executes these commands.
+The Desktop Bridge must be running for these commands to work.
 """
 
-import json
+import os
 import logging
+import httpx
 from typing import Optional
-from livekit.agents import function_tool
 
 logger = logging.getLogger("vyaas_local_commands")
-logger.setLevel(logging.INFO)
 
-# Global reference to the room for sending data
-_current_room = None
+# Configuration
+BRIDGE_URL = os.getenv("BRIDGE_URL", "http://localhost:18790")
+BRIDGE_SECRET = os.getenv("BRIDGE_SECRET", "vyaas_local_bridge_2025")
 
-def set_room(room):
-    """Set the LiveKit room reference for data channel communication"""
-    global _current_room
-    _current_room = room
-    logger.info("Room set for local commands")
+# HTTP client for async requests
+_http_client: Optional[httpx.AsyncClient] = None
 
-async def _send_local_command(command_type: str, params: dict) -> bool:
-    """
-    Send a command to the local desktop bridge via data channel.
-    Returns True if command was sent successfully.
-    """
-    global _current_room
-    
-    if not _current_room:
-        logger.error("No room available for sending local commands")
-        return False
-    
+
+def get_client() -> httpx.AsyncClient:
+    """Get or create HTTP client"""
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(timeout=30.0)
+    return _http_client
+
+
+async def _send_command(command: str, params: dict) -> str:
+    """Send command to Desktop Bridge"""
     try:
-        payload = {
-            "type": "local_command",
-            "command": command_type,
-            "params": params
-        }
-        
-        await _current_room.local_participant.publish_data(
-            json.dumps(payload),
-            topic="local_commands"
+        client = get_client()
+        response = await client.post(
+            f"{BRIDGE_URL}/command",
+            json={
+                "secret": BRIDGE_SECRET,
+                "command": command,
+                "params": params
+            }
         )
-        logger.info(f"Sent local command: {command_type}")
-        return True
+        
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"✅ Command {command} executed: {data.get('result', 'ok')}")
+            return data.get("result", "Command executed")
+        elif response.status_code == 401:
+            return "❌ Bridge authorization failed. Check BRIDGE_SECRET."
+        else:
+            return f"❌ Bridge error: {response.status_code}"
+            
+    except httpx.ConnectError:
+        return "❌ Desktop Bridge nahi chal raha. Please run start_bridge.bat on your PC."
     except Exception as e:
-        logger.error(f"Failed to send local command: {e}")
-        return False
+        logger.error(f"Error sending command: {e}")
+        return f"❌ Error: {str(e)}"
 
 
-# ============== LOCAL APP OPENING TOOLS ==============
+# ============== LOCAL COMMAND TOOLS ==============
 
-@function_tool()
 async def open_whatsapp_local() -> str:
     """
-    Open WhatsApp Desktop app on the user's PC.
-    This command is sent to the local desktop bridge for execution.
-    Returns:
-        Status message
+    Open WhatsApp Desktop on user's PC.
+    Use this when user asks to open WhatsApp.
     """
-    success = await _send_local_command("open_app", {"app": "whatsapp"})
-    if success:
-        return "Done! WhatsApp open karne ka command bhej diya hai Bhaiya!"
-    return "Error: Desktop bridge se connection nahi hai. Please check if bridge is running."
+    return await _send_command("open_app", {"app": "whatsapp"})
 
 
-@function_tool()
 async def open_maps_local(query: str = "") -> str:
     """
-    Open Google Maps on the user's PC, optionally with a search query.
+    Open Google Maps on user's PC.
+    
     Args:
-        query: Optional location or place to search (e.g., "Taj Mahal", "restaurants near me")
-    Returns:
-        Status message
+        query: Optional location to search (e.g., "Delhi", "restaurants near me")
     """
-    success = await _send_local_command("open_maps", {"query": query})
-    if success:
-        return f"Done! Google Maps {'with ' + query if query else ''} open kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("open_maps", {"query": query})
 
 
-@function_tool()
 async def open_notes_local(content: str = "") -> str:
     """
-    Open Notepad/Notes app on user's PC, optionally with content to write.
+    Open Notepad on user's PC.
+    
     Args:
-        content: Optional text content to write in the notes
-    Returns:
-        Status message
+        content: Optional text to paste into Notepad
     """
-    success = await _send_local_command("open_notes", {"content": content})
-    if success:
-        return "Done! Notes app open kar diya Bhaiya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("open_notes", {"content": content})
 
 
-@function_tool()
 async def open_app_local(app_name: str) -> str:
     """
-    Open any application on the user's PC by name.
-    Common apps: whatsapp, chrome, spotify, discord, telegram, calculator, notepad,
-                 excel, word, powerpoint, vs code, file explorer, settings, camera
-    Args:
-        app_name: Name of the application to open
-    Returns:
-        Status message
-    """
-    success = await _send_local_command("open_app", {"app": app_name})
-    if success:
-        return f"Done! {app_name} open karne ka command bhej diya!"
-    return "Error: Desktop bridge se connection nahi hai."
-
-
-@function_tool()
-async def send_whatsapp_local(phone_number: str, message: str) -> str:
-    """
-    Send a WhatsApp message to a phone number via local desktop automation.
-    This uses the WhatsApp Desktop app on user's PC for reliable messaging.
-    Args:
-        phone_number: Phone number with country code (e.g., '919876543210' for India +91)
-                     Do NOT include + sign, brackets, dashes or spaces
-        message: Content of the message to send
-    Returns:
-        Status message
-    """
-    # Clean phone number
-    clean_phone = ''.join(filter(str.isdigit, phone_number))
+    Open any application on user's PC.
     
-    success = await _send_local_command("send_whatsapp", {
-        "phone": clean_phone,
-        "message": message
-    })
-    if success:
-        return f"Done! WhatsApp message {phone_number} ko bhejne ka command diya Bhaiya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    Args:
+        app_name: Name of the app (e.g., "spotify", "chrome", "calculator", "vscode")
+    """
+    return await _send_command("open_app", {"app": app_name})
 
 
-@function_tool()
+async def send_whatsapp_local(phone: str, message: str) -> str:
+    """
+    Send WhatsApp message using phone number.
+    
+    Args:
+        phone: Phone number with country code (e.g., "919876543210")
+        message: Message to send
+    """
+    return await _send_command("send_whatsapp", {"phone": phone, "message": message})
+
+
 async def send_whatsapp_contact_local(contact_name: str, message: str) -> str:
     """
-    Send a WhatsApp message to a contact by searching their name.
-    Uses local WhatsApp Desktop app with search functionality.
+    Send WhatsApp message by searching contact name.
+    
     Args:
-        contact_name: Name of the contact to search and message
-        message: Content of the message to send
-    Returns:
-        Status message
+        contact_name: Name of the contact (e.g., "Mitul", "Papa")
+        message: Message to send
     """
-    success = await _send_local_command("send_whatsapp_contact", {
-        "contact": contact_name,
-        "message": message
-    })
-    if success:
-        return f"Done! {contact_name} ko WhatsApp message bhej diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("send_whatsapp_contact", {"contact": contact_name, "message": message})
 
 
-@function_tool()
 async def type_text_local(text: str) -> str:
     """
-    Type text on the user's PC using keyboard automation.
-    Useful for typing in any currently focused application.
+    Type text using keyboard automation on user's PC.
+    The text will be typed wherever the cursor is focused.
+    
     Args:
-        text: The text to type
-    Returns:
-        Status message
+        text: Text to type
     """
-    success = await _send_local_command("type_text", {"text": text})
-    if success:
-        return "Done! Text type kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("type_text", {"text": text})
 
 
-@function_tool()
 async def press_key_local(key: str) -> str:
     """
-    Press a keyboard key or combination on user's PC.
+    Press keyboard key or combination on user's PC.
+    
     Args:
-        key: Key to press (e.g., 'enter', 'tab', 'escape', 'ctrl+s', 'alt+f4')
-    Returns:
-        Status message
+        key: Key to press (e.g., "enter", "ctrl+s", "alt+f4")
     """
-    success = await _send_local_command("press_key", {"key": key})
-    if success:
-        return f"Done! {key} press kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("press_key", {"key": key})
 
 
-@function_tool()
 async def open_url_local(url: str) -> str:
     """
-    Open a URL in the default browser on user's PC.
+    Open URL in browser on user's PC.
+    
     Args:
-        url: The URL to open
-    Returns:
-        Status message
+        url: URL to open (e.g., "https://google.com")
     """
-    success = await _send_local_command("open_url", {"url": url})
-    if success:
-        return f"Done! Browser mein {url} open kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("open_url", {"url": url})
 
 
-@function_tool()
 async def play_youtube_local(query: str) -> str:
     """
-    Search and play a YouTube video on user's PC.
+    Search and play YouTube video on user's PC.
+    
     Args:
-        query: What to search and play on YouTube
-    Returns:
-        Status message
+        query: Search query (e.g., "Arijit Singh songs", "coding tutorial")
     """
-    success = await _send_local_command("play_youtube", {"query": query})
-    if success:
-        return f"Done! YouTube pe {query} search kar raha hoon!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("play_youtube", {"query": query})
 
 
-@function_tool()
 async def take_screenshot_local() -> str:
-    """
-    Take a screenshot on the user's PC and save it to Pictures folder.
-    Returns:
-        Status message
-    """
-    success = await _send_local_command("screenshot", {})
-    if success:
-        return "Done! Screenshot le liya aur Pictures folder mein save kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    """Take a screenshot on user's PC and save to Pictures folder."""
+    return await _send_command("screenshot", {})
 
 
-@function_tool()
 async def set_volume_local(level: int) -> str:
     """
-    Set system volume level on user's PC.
+    Set system volume on user's PC.
+    
     Args:
-        level: Volume level from 0 to 100
-    Returns:
-        Status message
+        level: Volume level 0-100
     """
-    success = await _send_local_command("set_volume", {"level": level})
-    if success:
-        return f"Done! Volume {level}% kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("set_volume", {"level": level})
 
 
-@function_tool()
 async def lock_pc_local() -> str:
-    """
-    Lock the user's PC screen.
-    Returns:
-        Status message
-    """
-    success = await _send_local_command("lock_pc", {})
-    if success:
-        return "Done! PC lock kar diya Bhaiya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    """Lock user's PC immediately."""
+    return await _send_command("lock_pc", {})
 
 
-@function_tool()
-async def shutdown_pc_local(delay_seconds: int = 60) -> str:
+async def shutdown_pc_local(delay: int = 60) -> str:
     """
-    Schedule PC shutdown after a delay.
+    Schedule PC shutdown.
+    
     Args:
-        delay_seconds: Seconds to wait before shutdown (default 60 for safety)
-    Returns:
-        Status message
+        delay: Seconds before shutdown (default 60)
     """
-    success = await _send_local_command("shutdown", {"delay": delay_seconds})
-    if success:
-        return f"Done! PC {delay_seconds} seconds mein shutdown ho jayega. Cancel karne ke liye bolo."
-    return "Error: Desktop bridge se connection nahi hai."
+    return await _send_command("shutdown", {"delay": delay})
 
 
-@function_tool()
 async def cancel_shutdown_local() -> str:
-    """
-    Cancel any scheduled PC shutdown.
-    Returns:
-        Status message
-    """
-    success = await _send_local_command("cancel_shutdown", {})
-    if success:
-        return "Done! Shutdown cancel kar diya!"
-    return "Error: Desktop bridge se connection nahi hai."
+    """Cancel any scheduled shutdown."""
+    return await _send_command("cancel_shutdown", {})
